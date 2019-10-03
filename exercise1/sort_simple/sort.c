@@ -64,7 +64,12 @@ int main(int argc, char **argv) {
     for (int i = 0; i < *size; ++i) {
         printf("%s", unsorted[i]);
     }
-    free(unsorted);
+    for (size_t i = 0; i < *size; i++)
+    {
+        free(unsorted[i]);
+    }
+    
+    // free(unsorted);
     free(size);
     if (argc > 1) {
         fclose(fp);
