@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  ex1-sort-simple-build:
+    working_directory: exercise1/sort_simple
+    docker:
+      - image: gcc:4.9
+    steps:
+      - checkout
+      - run:
+          name: Make sort_simple
+          command: make
+
+  ex1-sort-simple-valgrind:
+    working_directory: exercise1/sort_simple
+    docker:
+      - image: mooreryan/valgrind
+    steps:
+      - checkout
+      - run:
+          name: valgrind sort_simple
+          command: --leak-check=full ./test.sh
