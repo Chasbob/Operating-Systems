@@ -1,7 +1,7 @@
 version: 2
 jobs:
   ex1-sort-simple-build:
-    working_directory: exercise1/sort_simple
+    working_directory: ~/project/exercise1/sort_simple
     docker:
       - image: gcc:4.9
     steps:
@@ -11,7 +11,7 @@ jobs:
           command: make
 
   ex1-sort-simple-valgrind:
-    working_directory: exercise1/sort_simple
+    working_directory: ~/project/exercise1/sort_simple
     docker:
       - image: mooreryan/valgrind
     steps:
