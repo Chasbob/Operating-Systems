@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: Make sort_simple
-          command: ls -la && make
+          command: cd exercise1/sort_simple && make
 
   ex1-sort-simple-valgrind:
     working_directory: ~/project/exercise1/sort_simple
@@ -18,7 +18,7 @@ jobs:
       - checkout
       - run:
           name: valgrind sort_simple
-          command: --leak-check=full ./test.sh
+          command: cd exercise1/sort_simple && --leak-check=full ./test.sh
 
 workflows:
     version: 2
