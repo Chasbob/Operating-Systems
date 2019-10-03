@@ -18,7 +18,7 @@ jobs:
       - checkout
       - run:
           name: valgrind sort_simple
-          command: cd exercise1/sort_simple && --leak-check=full ./test.sh
+          command: cd exercise1/sort_simple && valgrind --leak-check=full ./test.sh
 
 workflows:
     version: 2
