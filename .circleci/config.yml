@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: Make sort_simple
-          command: make
+          command: ls -la && make
 
   ex1-sort-simple-valgrind:
     working_directory: ~/project/exercise1/sort_simple
