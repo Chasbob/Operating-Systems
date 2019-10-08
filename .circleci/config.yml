@@ -21,7 +21,7 @@ commands:
         default: "."
     steps:
       - checkout
-      - run: cd << parameters.dir >> && make && valgrind --leak-check=full << parameters.name >>
+      - run: cd << parameters.dir >> && make && valgrind --leak-check=full << parameters.script-name >>
 
 jobs:
   ex1-sort-simple-build:
