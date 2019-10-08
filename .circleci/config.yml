@@ -9,13 +9,14 @@ commands:
     steps:
       - checkout
       - run: cd << parameters.dir >> && make
+
   valgrind:
     description: "run valgrind on an binary in a given directory"
     parameters:
       dir:
         type: string
         default: "."
-      name:
+      script-name:
         type: string
         default: "."
     steps:
@@ -40,7 +41,7 @@ jobs:
     - checkout
     - valgrind:
         dir: exercise1/sort_simple
-        name: sort
+        script-name: sort
   
 workflows:
     version: 2
