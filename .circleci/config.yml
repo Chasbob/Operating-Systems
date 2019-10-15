@@ -24,28 +24,33 @@ commands:
       - run: cd << parameters.dir >> && make && valgrind --leak-check=full << parameters.script-name >>
 
 jobs:
-  ex1-sort-simple-build:
+  sort-simple:
     working_directory: ~/project/exercise1/sort_simple
     docker:
       - image: gcc:4.9
     steps:
       - checkout
       - make:
-          dir: exercise1/sort_simple
+          dir: .
+      - valgrind:
+          dir: .
+          script-name: sort
 
-  ex1-sort-simple-valgrind:
-    working_directory: ~/project/exercise1/sort_simple
+  sort-advanced:
+    working_directory: ~/project/exercise1/sort_advanced
     docker:
-      - image: mooreryan/valgrind
+      - image: gcc:4.9
     steps:
-    - checkout
-    - valgrind:
-        dir: exercise1/sort_simple
-        script-name: sort
+      - checkout
+      - make:
+          dir: .
+      - valgrind:
+          dir: .
+          script-name: sort
   
 workflows:
     version: 2
-    build-test:
+    sort-simple:
       jobs:
-        - ex1-sort-simple-build
-        - ex1-sort-simple-valgrind
+        - sort-simple
+        - sort-advanced
