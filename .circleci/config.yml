@@ -23,3 +23,10 @@ commands:
       - checkout
       - run: cd << parameters.dir >> && make && valgrind --leak-check=full << parameters.script-name >>
 
+workflows:
+  version: 2
+  place-holder:
+    jobs:
+      - echo:
+          steps:
+            - echo "working!"
