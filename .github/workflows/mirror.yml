@@ -7,6 +7,8 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       - uses: actions/checkout@v1
+        with:
+          ref: workflows
       - name: Mirror Repository
         uses: spyoungtech/mirror-action@v0.1.1
         with:
