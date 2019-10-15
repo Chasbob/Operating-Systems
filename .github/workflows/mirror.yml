@@ -1,12 +1,14 @@
 name: "Mirror Workflow"
 on:
-    push:
+  push:
 
 jobs:
     mirror:
-    - name: Mirror Repository
-    uses: spyoungtech/mirror-action@v0.1.1
-    with:
-      args: 'https://git.cs.bham.ac.uk/cxd738/test.git'
-    env:
-      GIT_PASSWORD: ${{ secrets.CS_PASSWORD }}
+      runs-on: ubuntu-latest
+      steps:
+      - name: Mirror Repository
+        uses: spyoungtech/mirror-action@v0.1.1
+        with:
+          args: 'https://git.cs.bham.ac.uk/cxd738/test.git'
+        env:
+          GIT_PASSWORD: ${{ secrets.CS_PASSWORD }}
