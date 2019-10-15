@@ -8,9 +8,9 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          ref: master
+      - uses: actions/checkout@master
+      - name: Prepare repository
+        run: git checkout "master"
       - name: Mirror Repository
         uses: spyoungtech/mirror-action@v0.1.1
         with:
