@@ -3,15 +3,16 @@ on:
   push:
 
 jobs:
-    mirror:
-      runs-on: ubuntu-latest
-      steps:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v1
         with:
           ref: workflows
       - name: Mirror Repository
         uses: spyoungtech/mirror-action@v0.1.1
         with:
-          args: 'https://git.cs.bham.ac.uk/cxd738/test.git'
+          args: "https://git.cs.bham.ac.uk/cxd738/test.git"
         env:
           GIT_PASSWORD: ${{ secrets.CS_PASSWORD }}
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
