@@ -1,0 +1,19 @@
+name: "Mirror Workflow"
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    build:
+        name: Mirror to Gitlab
+        runs-on: ubuntu-latest
+        steps:
+          - name: 'Checkout code'
+            uses: actions/checkout@master
+          - name: 'Push Mirror'
+            uses: 'spyoungtech/mirror-action@master'
+            with:
+                args: 'https://git-teaching.cs.bham.ac.uk/mod-os-2019/cxd738.git'
+            env:
+                GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
