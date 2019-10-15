@@ -31,9 +31,9 @@ jobs:
     steps:
       - checkout
       - make:
-          dir: .
+          dir: exercise1/sort_simple
       - valgrind:
-          dir: .
+          dir: exercise1/sort_simple
           script-name: sort
 
   sort-advanced:
@@ -43,9 +43,9 @@ jobs:
     steps:
       - checkout
       - make:
-          dir: .
+          dir: exercise1/sort_advanced
       - valgrind:
-          dir: .
+          dir: exercise1/sort_advanced
           script-name: sort
   
 workflows:
