@@ -1,19 +1,12 @@
 name: "Mirror Workflow"
 on:
     push:
-        # branches:
-        #     - master
 
 jobs:
-    build:
-        name: Mirror to Gitlab
-        runs-on: ubuntu-latest
-        steps:
-          - name: 'Checkout code'
-            uses: actions/checkout@master
-          - name: 'Push Mirror'
-            uses: 'spyoungtech/mirror-action@master'
-            with:
-                args: 'https://git.cs.bham.ac.uk/cxd738/test.git'
-            env:
-                GIT_PASSWORD: ${{ secrets.CS_PASSWORD }}
+    mirror:
+    - name: Mirror Repository
+    uses: spyoungtech/mirror-action@v0.1.1
+    with:
+      args: 'https://git.cs.bham.ac.uk/cxd738/test.git'
+    env:
+      GIT_PASSWORD: ${{ secrets.CS_PASSWORD }}
