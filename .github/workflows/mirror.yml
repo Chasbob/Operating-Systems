@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-        with:
-          ref: exercise1
+        # with:
+        #   ref: exercise1
       - name: Mirror Repository
         uses: spyoungtech/mirror-action@v0.1.1
         with:
