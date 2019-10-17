@@ -12,8 +12,16 @@
 // --- Data structures ---
 
 // TODO: Define additional data structures here when you need them.
+typedef struct node
+{
+  int value;
+  struct node *next;
+} node;
 
-typedef struct list{
+typedef struct list
+{
+  struct node *head;
+  struct node *last;
   // TODO: define your list structure here!
 } list;
 
@@ -26,7 +34,7 @@ typedef struct list{
  * * `l`    - The list to be initialized
  *
  */
-void init(list * l);
+void init(list *l);
 
 /*
  * Function to free a list when it is not needed anymore
@@ -35,7 +43,7 @@ void init(list * l);
  * * `l`    - The list to be destroyed
  *
  */
-void destroy(list * l);
+void destroy(list *l);
 
 /*
  * Function to get `data` of element number `index`.
@@ -48,7 +56,7 @@ void destroy(list * l);
  * Returns the `data` field of the element or -1 in case of errors.
  *
  */
-int get(list * l, unsigned int index);
+int get(list *l, unsigned int index);
 
 /*
  * Function to prepend a new element to the list.
@@ -61,7 +69,7 @@ int get(list * l, unsigned int index);
  * Returns 0 for successful termination and -1 in case of errors.
  *
  */
-int prepend(list * l, int data);
+int prepend(list *l, int data);
 
 /*
  * Function to append a new element to the list.
@@ -74,7 +82,7 @@ int prepend(list * l, int data);
  * Returns 0 for successful termination and -1 in case of errors.
  *
  */
-int append(list * l, int data);
+int append(list *l, int data);
 
 /*
  * Function to insert a new element to the list.
@@ -88,7 +96,7 @@ int append(list * l, int data);
  * Returns 0 for successful termination and -1 in case of errors.
  *
  */
-int insert(list * l, unsigned int index, int data);
+int insert(list *l, unsigned int index, int data);
 
 /*
  * Function to delete an existing element from the list.
@@ -101,7 +109,7 @@ int insert(list * l, unsigned int index, int data);
  * Returns 0 for successful termination and -1 in case of errors.
  *
  */
-int remove_element(list * l, unsigned int index);
+int remove_element(list *l, unsigned int index);
 
 /*
  * Function to print all elements of the list.
@@ -109,6 +117,6 @@ int remove_element(list * l, unsigned int index);
  * #Arguments
  * * `l`      - the list to print.
  */
-void print_list(list * l);
+void print_list(list *l);
 
 #endif
