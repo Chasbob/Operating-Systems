@@ -135,6 +135,8 @@ int remove_element(list *l, unsigned int index) {
 //
 //
 int insert(list *l, unsigned int index, int data) {
+    index++;
+
     if (index == 0) {
         return push(l, data);
 //        return prepend(l, data);
