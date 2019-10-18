@@ -62,7 +62,7 @@ jobs:
       - image: gcc:4.9
     steps:
       - checkout
-      - valgrind:
+      - test:
           dir: exercise1/sort_simple
           script-name: ./test.sh
 
@@ -91,7 +91,7 @@ jobs:
       - image: gcc:4.9
     steps:
       - checkout
-      - valgrind:
+      - test:
           dir: exercise1/sort_advanced
           script-name: ./test.sh
 
@@ -120,7 +120,7 @@ jobs:
       - image: gcc:4.9
     steps:
       - checkout
-      - valgrind:
+      - test:
           dir: exercise1/linked_lists
           script-name: ./test.sh
   
