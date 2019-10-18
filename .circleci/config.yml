@@ -23,6 +23,19 @@ commands:
       - checkout
       - run: cd << parameters.dir >> && make && valgrind --leak-check=full << parameters.script-name >>
 
+  test:
+    description: "run test script in a given directory"
+    parameters:
+      dir:
+        type: string
+        default: "."
+      script-name:
+        type: string
+        default: "."
+    steps:
+      - checkout
+      - run: cd << parameters.dir >> && make && << parameters.script-name >>
+
 jobs:
   ex1-sort-simple-build:
     working_directory: ~/project/exercise1/sort_simple
@@ -42,6 +55,74 @@ jobs:
     - valgrind:
         dir: exercise1/sort_simple
         script-name: sort
+
+  ex1-sort-simple-test:
+    working_directory: ~/project/exercise1/sort_simple
+    docker:
+      - image: gcc:4.9
+    steps:
+      - checkout
+      - valgrind:
+          dir: exercise1/sort_simple
+          script-name: ./test.sh
+
+  ex1-sort-advanced-build:
+    working_directory: ~/project/exercise1/sort_advanced
+    docker:
+      - image: gcc:4.9
+    steps:
+      - checkout
+      - make:
+          dir: exercise1/sort_advanced
+
+  ex1-sort-advanced-valgrind:
+    working_directory: ~/project/exercise1/sort_advanced
+    docker:
+      - image: mooreryan/valgrind
+    steps:
+      - checkout
+      - valgrind:
+          dir: exercise1/sort_advanced
+          script-name: sort
+
+  ex1-sort-advanced-test:
+    working_directory: ~/project/exercise1/sort_advanced
+    docker:
+      - image: gcc:4.9
+    steps:
+      - checkout
+      - valgrind:
+          dir: exercise1/sort_advanced
+          script-name: ./test.sh
+
+  ex1-linked-list-build:
+    working_directory: ~/project/exercise1/sort_advanced
+    docker:
+      - image: gcc:4.9
+    steps:
+      - checkout
+      - make:
+          dir: exercise1/sort_advanced
+
+  ex1-linked-list-valgrind:
+    working_directory: ~/project/exercise1/linked_list
+    docker:
+      - image: mooreryan/valgrind
+    steps:
+      - checkout
+      - valgrind:
+          dir: exercise1/linked_list
+          script-name: test_list
+
+  ex1-linked-list-test:
+    working_directory: ~/project/exercise1/linked_list
+    docker:
+      - image: gcc:4.9
+    steps:
+      - checkout
+      - valgrind:
+          dir: exercise1/linked_lists
+          script-name: ./test.sh
   
 workflows:
     version: 2
