@@ -11,17 +11,12 @@
 
 // --- Data structures ---
 
-// TODO: Define additional data structures here when you need them.
-typedef struct node
-{
-  int value;
-  struct node *next;
+typedef struct node {
+    int data;
+    struct node *next;
 } node;
-
-typedef struct list
-{
-  struct node *head;
-  // TODO: define your list structure here!
+typedef struct list {
+    struct node *head;
 } list;
 
 // --- Functions ---

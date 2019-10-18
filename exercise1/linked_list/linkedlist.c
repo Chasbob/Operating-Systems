@@ -17,10 +17,27 @@
 
 // TODO: Implement those methods!
 
+int pop_first(list *l) {
+    node *next = NULL;
+    node *current = l->head;
+    if (current == NULL) {
+        return -1;
+    }
+    if (current->next == NULL) {
+        l->head = current->next;
+        return 0;
+    }
+    next = current->next;
+    free(current);
+    l->head = next;
+    return 0;
+}
+
+
 node *getNthNode(node *n, unsigned int index) {
     if (index == 0) {
         return n;
-    } else if (n->next != NULL) {
+    } else if (n != NULL) {
         return getNthNode(n->next, index - 1);
     } else {
         return NULL;
@@ -28,12 +45,18 @@ node *getNthNode(node *n, unsigned int index) {
 }
 
 int get(list *l, unsigned int index) {
-    return getNthNode(l->head, index)->value;
+    node *got = getNthNode(l->head, index);
+    return got->data;
+//    if (got->data == -1) {
+//        return -1;
+//    } else {
+//        return got->data;
+//    }
 }
 
 //int getNext(node *n, unsigned int index) {
 //    if (index == 0) {
-//        return n->value;
+//        return n->data;
 //    } else if (n->next != NULL) {
 //        return getNext(n->next, index - 1);
 //    } else {
@@ -41,113 +64,125 @@ int get(list *l, unsigned int index) {
 //    }
 //}
 
-node *newNode(int value) {
-    struct node *n = (node *) malloc(sizeof(node));
-//    int *newValue = malloc(sizeof(int));
-//    *newValue = value;
-    n->value = value;
+node *newElement(int value) {
+    node *n = malloc(sizeof(node));
+    n->data = value;
     return n;
 }
 
+int push(struct list *head, int data) {
+    node *new_node;
+    new_node = malloc(sizeof(node));
+    if (new_node == NULL) {
+        return -1;
+    }
+    new_node->data = data;
+    new_node->next = head->head;
+    head->head = new_node;
+    return 0;
+}
+
 int prepend(list *l, int data) {
-    struct node *newHead = newNode(data);
-    newHead->next = l->head;
-    l->head = newHead;
-    return data;
+    if (l->head->data == -1) {
+        l->head->data = data;
+        return 0;
+    }
+    return push(l, data);
 }
 
 int append(list *l, int data) {
-    struct node *newLast = newNode(data);
-    struct node *current = l->head;
-    while (current != NULL) {
-        if (current->value == NULL) {
-            current->value = data;
-            return 0;
-        } else if (current->next == NULL) {
-            current->next = newLast;
-            return 0;
-        }
+    node *current = l->head;
+    while (current->next != NULL) {
+        current = current->next;
     }
-    return data;
+
+    /* now we can add a new variable */
+    current->next = malloc(sizeof(node));
+    current->next->data = data;
+    current->next->next = NULL;
+    return 1;
 }
 
 
+//int remove_by_index(list *l, int n) {
+//
+//
+//}
+
 int remove_element(list *l, unsigned int index) {
-    struct node *current = l->head;
-    struct node *prev = NULL;
-    while (current != NULL && index >= 0) {
-        if (index == 0) {
-            if (current->next == NULL) {
-                if (prev == NULL) {
-                    free(current);
-                    return 1;
-                } else {
-                    prev->next = NULL;
-                    free(current);
-                    return 1;
-                }
-            }else{
-                
-            }
-        }
-    }
+    unsigned int i = 0;
+    node *current = l->head;
+    node *temp_node = NULL;
+
     if (index == 0) {
-        node *head = l->head;
-        int value = head->value;
-        if (l->last == head) {
-            destroy(l);
-        } else {
-            l->head = head->next;
-            free(head);
+        return pop_first(l);
+    }
+
+    for (i = 0; i < index - 1; i++) {
+        if (current->next == NULL) {
+            return -1;
         }
-        return value;
+        current = current->next;
+    }
+
+    temp_node = current->next;
+    current->next = temp_node->next;
+    free(temp_node);
+
+    return 0;
+}
+
+//
+//
+int insert(list *l, unsigned int index, int data) {
+    if (index == 0) {
+        return push(l, data);
+//        return prepend(l, data);
     } else {
         node *before = getNthNode(l->head, index - 1);
         if (before == NULL) {
-            printf("Out of bounds.");
-            exit(2);
+            return -1;
         }
-        node *n = getNthNode(l->head, index);
-        before->next = n->next;
-        free(n);
-    }
-
-}
-
-int insert(list *l, unsigned int index, int data) {
-    if (index == 0) {
-        return prepend(l, data);
-    } else {
-        node *before = getNthNode(l->head, index - 1);
-        node *n = newNode(data);
+        node *n = newElement(data);
         n->next = before->next;
         before->next = n;
     }
+    return 1;
 }
 
-void print_list(list *l) {
-    node *current = l->head;
+void print_list(list *head) {
+    node *current = head->head;
+    if(current==NULL){
+        printf("empty list\n");
+        return;
+    }
+
     while (current != NULL) {
-        printf("%i\n", current->value);
+        printf("%d ", current->data);
         current = current->next;
     }
+    printf("\n");
 }
 
 void init(list *l) {
-    l = malloc(sizeof(list));
-    if (l == NULL) {
-        printf("malloc error.");
+//    l = malloc(sizeof(list));
+//    if (l == NULL) {
+//        exit(1);
+//    }
+    l->head = malloc(sizeof(node));
+    if (l->head == NULL) {
         exit(1);
     }
-    struct node *n = malloc(sizeof(node));
-    if (n == NULL) {
-        printf("malloc error.");
-        exit(1);
-    }
-    n->value = NULL;
-    n->next = NULL;
-    l->head = n;
+    l->head->data = -1;
+    l->head->next = NULL;
 }
 
 void destroy(list *l) {
+    node *current = l->head;
+    node *prev = NULL;
+    while (current != NULL) {
+        prev = current;
+        current = current->next;
+        free(prev);
+    }
 }
