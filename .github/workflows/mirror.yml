@@ -1,0 +1,20 @@
+name: "Mirror Workflow"
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Prepare repository
+        run: git checkout "master"
+      - name: Mirror Repository
+        uses: spyoungtech/mirror-action@v0.1.1
+        with:
+          args: "https://git-teaching.cs.bham.ac.uk/mod-os-2019/cxd738.git"
+        env:
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+          GIT_USERNAME: ${{ secrets.GIT_USERNAME }}
