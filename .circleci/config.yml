@@ -126,7 +126,18 @@ jobs:
   
 workflows:
     version: 2
-    build-test:
+    sort-simple:
       jobs:
         - ex1-sort-simple-build
         - ex1-sort-simple-valgrind
+        - ex1-sort-simple-test
+    sort-advanced:
+      jobs:
+        - ex1-sort-advanced-build
+        - ex1-sort-advanced-valgrind
+        - ex1-sort-advanced-test
+    linked-list:
+      jobs:
+        - ex1-linked-list-build
+        - ex1-linked-list-valgrind
+        - ex1-linked-list-test
