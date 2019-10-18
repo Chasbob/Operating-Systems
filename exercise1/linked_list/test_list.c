@@ -1,4 +1,5 @@
 #include "linkedlist.h"
+#include "linkedlist.c"
 #include <stdio.h>
 #include <assert.h>
 

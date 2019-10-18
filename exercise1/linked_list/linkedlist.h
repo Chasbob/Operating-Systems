@@ -21,7 +21,6 @@ typedef struct node
 typedef struct list
 {
   struct node *head;
-  struct node *last;
   // TODO: define your list structure here!
 } list;
 
