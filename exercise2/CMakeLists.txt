@@ -1,0 +1,6 @@
+project(EX1)
+set(SOURCE_FILES *.c)
+add_executable(server server.c)
+add_executable(serverThreaded serverThreaded.c)
+add_executable(client client.c)
+set(CMAKE_C_FLAGS "-D_POSIX_SOURCE -Wall -Werror -pedantic -std=c99 -D_GNU_SOURCE -pthread")
