@@ -1,7 +1,6 @@
 /* A threaded server in the internet domain using TCP
    The port number is passed as an argument */
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ctype.h>
@@ -10,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define BUFFERLENGTH 256
 
@@ -26,19 +26,6 @@ char *fileName;
 
 pthread_mutex_t mut; /* the lock */
 
-typedef void(*split_fn)(const char *, size_t, void *);
-
-void split(const char *str, char sep, split_fn fun, void *data) {
-    unsigned int start = 0, stop;
-    for (stop = 0; str[stop]; stop++) {
-        if (str[stop] == sep) {
-            fun(str + start, stop - start, data);
-            start = stop + 1;
-        }
-    }
-    fun(str + start, stop - start, data);
-}
-
 /* the procedure called for each request */
 void *processRequest(void *args) {
     int *newsockfd = (int *) args;
@@ -47,9 +34,8 @@ void *processRequest(void *args) {
     while (1) {
         bzero (buffer, BUFFERLENGTH);
         n = read(*newsockfd, buffer, BUFFERLENGTH - 1);
-//        printf("Here is the message: `%s` of length: %lu\n", buffer, strlen(buffer));
         if (n < 0) {
-            printf("ERROR reading from socket");
+            printf("ERROR reading from socket\n");
             break;
         }
 
@@ -81,31 +67,6 @@ void *processRequest(void *args) {
         }
 
 
-//        if (buffer[0] == '\n' && strlen(buffer) > 1) {
-//            char out[BUFFERLENGTH];
-//            sprintf(out, "\n%d ^%s$\n", lineNo++, "\n");
-//            char out2[BUFFERLENGTH];
-//            char tempBuffer[BUFFERLENGTH];
-//            for (unsigned int i = 0; i < strlen(buffer) - 2; ++i) {
-//                tempBuffer[i] = buffer[i + 1];
-//            }
-//            sprintf(out2, "\n%d ^%s$\n", lineNo++, tempBuffer);
-//            pthread_mutex_lock(&mut); /* lock exclusive access to variable isExecuted */
-//            fp = fopen(fileName, "a");
-//            fputs(out, fp);
-//            fputs(out2,fp);
-//            fclose(fp);
-//            pthread_mutex_unlock(&mut); /* release the lock */
-//        }else{
-//            char out[BUFFERLENGTH];
-//
-//            sprintf(out, "\n%d %s\n", lineNo++, buffer);
-//            pthread_mutex_lock(&mut); /* lock exclusive access to variable isExecuted */
-//            fp = fopen(fileName, "a");
-//            fputs(out, fp);
-//            fclose(fp);
-//            pthread_mutex_unlock(&mut); /* release the lock */
-//        }
         /* send the reply back */
         n = write(*newsockfd, buffer, BUFFERLENGTH);
         if (n < 0) {
@@ -203,5 +164,4 @@ int main(int argc, char *argv[]) {
 
 
     }
-    return 0;
 }

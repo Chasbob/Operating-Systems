@@ -16,12 +16,6 @@ void error(char *msg) {
     exit(0);
 }
 
-void *myThreadFun(void *vargp) {
-    sleep(1);
-    printf("Printing GeeksQuiz from Thread \n");
-    return NULL;
-}
-
 int main(int argc, char *argv[]) {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
@@ -74,7 +68,6 @@ int main(int argc, char *argv[]) {
 
         /* prepare message */
         printf("Please enter the message: ");
-        // bzero(buffer, BUFFERLENGTH);
         memset(buffer, 0, BUFFERLENGTH);
         fgets(buffer, BUFFERLENGTH, stdin);
         buffer[strlen(buffer)] = 0;
@@ -87,7 +80,6 @@ int main(int argc, char *argv[]) {
         if (strcmp(buffer, "") == 0) {
             break;
         }
-        // bzero(buffer, BUFFERLENGTH);
         memset(buffer, 0, BUFFERLENGTH);
 
         /* wait for reply */
