@@ -23,7 +23,6 @@ void *myThreadFun(void *vargp) {
 }
 
 int main(int argc, char *argv[]) {
-
     struct addrinfo hints;
     struct addrinfo *result, *rp;
     int sockfd, s;
@@ -70,7 +69,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Could not connect\n");
         exit(EXIT_FAILURE);
     }
-
     freeaddrinfo(result); /* No longer needed */
     while (1) {
 
@@ -79,14 +77,16 @@ int main(int argc, char *argv[]) {
         // bzero(buffer, BUFFERLENGTH);
         memset(buffer, 0, BUFFERLENGTH);
         fgets(buffer, BUFFERLENGTH, stdin);
-        if (strcmp(buffer, "exit\n") == 0) {
-            break;
-        }
+        buffer[strlen(buffer)] = 0;
+        printf("%s\n", buffer);
 
         /* send message */
         n = write(sockfd, buffer, strlen(buffer));
         if (n < 0)
             error("ERROR writing to socket");
+        if (strcmp(buffer, "") == 0) {
+            break;
+        }
         // bzero(buffer, BUFFERLENGTH);
         memset(buffer, 0, BUFFERLENGTH);
 
