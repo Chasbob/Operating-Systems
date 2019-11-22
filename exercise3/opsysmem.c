@@ -7,9 +7,9 @@
 #include <asm/uaccess.h>          // Required for the copy to user function
 #include <linux/mutex.h>	  // Required for the mutex functionality
 #include<linux/slab.h>
+#include "queue.h"
 #include "opsysmem.h"
 #include "ioctl.h"
-
 MODULE_LICENSE("GPL");            ///< The license type -- this affects available functionality
 MODULE_AUTHOR("Derek Molloy");    ///< The author -- visible when you use modinfo
 MODULE_DESCRIPTION("A simple Linux char driver for the BBB");  ///< The description -- see modinfo
@@ -48,7 +48,12 @@ int init_module(void){
 	}
 
 	printk(KERN_INFO "'mknod /dev/%s c %d 0'.\n", DEVICE_NAME, Major);
-   messages = kmalloc(sizeof(char*), GFP_KERNEL);
+   messages = createQueue();
+   if(messages == NULL){
+      printk(KERN_INFO "opsysmem: createQueue returned NULL to init, failing...\n");
+      cleanup_module();
+      return 0;
+   }
    mutex_init(&opsysmem_mutex);          // Initialize the mutex dynamically
 	return SUCCESS;
 }
@@ -59,7 +64,7 @@ int init_module(void){
  */
 void cleanup_module(void){
    unregister_chrdev(Major, DEVICE_NAME);         // unregister the major number
-   kfree(messages);
+   // TODO free the queue
    printk(KERN_INFO "opsysmem: Goodbye from the LKM!\n");
 }
 
@@ -71,11 +76,11 @@ void cleanup_module(void){
 static int device_open(struct inode *inodep, struct file *filep){
 
    if(!mutex_trylock(&opsysmem_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
-	printk(KERN_ALERT "OpSysMEM: Device in use by another process");
+	printk(KERN_ALERT "opsysmem: Device in use by another process");
 	return -EBUSY;
    }
    numberOpens++;
-   printk(KERN_INFO "OpSysMEM: Device has been opened %d time(s)\n", numberOpens);
+   printk(KERN_INFO "opsysmem: Device has been opened %d time(s)\n", numberOpens);
    return 0;
 }
 
@@ -88,16 +93,17 @@ static int device_open(struct inode *inodep, struct file *filep){
  *  @param offset The offset if required
  */
 static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
+
    int error_count = 0;
    // copy_to_user has the format ( * to, *from, size) and returns 0 on success
    error_count = copy_to_user(buffer, message, size_of_message);
 
    if (error_count==0){           // success!
-      printk(KERN_INFO "OpSysMEM: Sent %d characters to the user\n", size_of_message);
+      printk(KERN_INFO "opsysmem: Sent %d characters to the user\n", size_of_message);
       return (size_of_message=0); // clear the position to the start and return 0
    }
    else {
-      printk(KERN_INFO "OpSysMEM: Failed to send %d characters to the user\n", error_count);
+      printk(KERN_INFO "opsysmem: Failed to send %d characters to the user\n", error_count);
       return -EFAULT;      // Failed -- return a bad address message (i.e. -14)
    }
 }
@@ -112,22 +118,19 @@ static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t 
  */
 static ssize_t device_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
    if(len > MSG_MAX_SIZE){
-      printk(KERN_INFO "OpSysMEM: message must be smaller than %i\n",MSG_MAX_SIZE);
+      printk(KERN_INFO "opsysmem: message must be smaller than %i\n",MSG_MAX_SIZE);
       return len;
    }
    if(total_size + len > LIST_MAX_SIZE){
-      printk(KERN_INFO "OpSysMEM: This op would exced max size of %i\n",MSG_MAX_SIZE);
+      printk(KERN_INFO "opsysmem: This op would exced max size of %i\n",MSG_MAX_SIZE);
       return len;
    }
-   krealloc(messages, sizeof(messages) + len, GFP_KERNEL);
-   total_size = sizeof(messages);
-   // messages[message_count++] = buffer;
-   sprintf(messages[message_count++],"%s",buffer);
+   printk(KERN_INFO "opsysmem: buffer -> (%s)",buffer);
+   enQueue(messages,buffer);
+   total_size = total_size+len;
+   printk(KERN_INFO "opsysmem: total_size -> (%i)",total_size);
 
-
-   // sprintf(message, "%s(%zu letters)", buffer, len);   // appending received string with its length
-   // size_of_message = strlen(len);                 // store the length of the stored message
-   printk(KERN_INFO "OpSysMEM: %i messages, Received (%s) from the user\n", message_count,messages[message_count-1]);
+   printk(KERN_INFO "opsysmem: %i messages, Received (%s) from the user\n", messages->size, peekTail(messages));
    return len;
 }
 
@@ -138,6 +141,6 @@ static ssize_t device_write(struct file *filep, const char *buffer, size_t len, 
  */
 static int device_release(struct inode *inodep, struct file *filep){
    mutex_unlock(&opsysmem_mutex);                      // release the mutex (i.e., lock goes up)
-   printk(KERN_INFO "OpSysMEM: Device successfully closed\n");
+   printk(KERN_INFO "opsysmem: Device successfully closed\n");
    return 0;
 }
