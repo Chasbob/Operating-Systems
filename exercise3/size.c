@@ -1,15 +1,3 @@
-/**
- * @file   opsysmemmutex.c
- * @author Derek Molloy
- * @date   7 April 2015
- * @version 0.1
- * @brief  An introductory character driver to support the second article of my series on
- * Linux loadable kernel module (LKM) development. This module maps to /dev/opsysmem and
- * comes with a helper C program that can be run in Linux user space to communicate with
- * this the LKM. This version has mutex locks to deal with synchronization problems.
- * @see http://www.derekmolloy.ie/ for a full description and follow-up descriptions.
-*/
-
 #include <linux/init.h>           // Macros used to mark up functions e.g. __init __exit
 #include <linux/module.h>         // Core header for loading LKMs into the kernel
 #include <linux/device.h>         // Header to support the kernel Driver Model
@@ -17,8 +5,13 @@
 #include <linux/fs.h>             // Header for the Linux file system support
 #include <asm/uaccess.h>          // Required for the copy to user function
 #include <linux/mutex.h>	  // Required for the mutex functionality
-#define  DEVICE_NAME "opsysmem"    ///< The device will appear at /dev/opsysmem using this value
-#define  CLASS_NAME  "ebb"        ///< The device class -- this is a character device driver
+#include <linux/slab.h>
+
+#define  DEVICE_NAME        "opsysmem"    ///< The device will appear at /dev/opsysmem using this value
+#define  CLASS_NAME         "ebb"        ///< The device class -- this is a character device driver
+#define  LIST_MAX_SIZE      4194304
+#define  MSG_MAX_SIZE       4096
+#define  INITIAL_CAPACITY   1
 
 MODULE_LICENSE("GPL");            ///< The license type -- this affects available functionality
 MODULE_AUTHOR("Derek Molloy");    ///< The author -- visible when you use modinfo
@@ -26,25 +19,20 @@ MODULE_DESCRIPTION("A simple Linux char driver for the BBB");  ///< The descript
 MODULE_VERSION("0.1");            ///< A version number to inform users
 
 static int    majorNumber;                  ///< Store the device number -- determined automatically
-static char   message[256] = {0};           ///< Memory for the string that is passed from userspace
-static short  size_of_message;              ///< Used to remember the size of the string stored
+static char   message[MSG_MAX_SIZE] = {0};           ///< Memory for the string that is passed from userspace
+static short  size_of_messages;              ///< Used to remember the size of the string stored
 static int    numberOpens = 0;              ///< Counts the number of times the device is opened
 static struct class*  opsysmemClass  = NULL; ///< The device-driver class struct pointer
 static struct device* opsysmemDevice = NULL; ///< The device-driver device struct pointer
-
 static DEFINE_MUTEX(opsysmem_mutex);	    ///< Macro to declare a new mutex
-
+static char** msgs = 0;
+static short  no_msgs = 0;
 /// The prototype functions for the character driver -- must come before the struct definition
 static int     dev_open(struct inode *, struct file *);
 static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
-/**
- * Devices are represented as file structure in the kernel. The file_operations structure from
- * /linux/fs.h lists the callback functions that you wish to associated with your file operations
- * using a C99 syntax structure. char devices usually implement open, read, write and release calls
- */
 static struct file_operations fops =
 {
    .open = dev_open,
@@ -53,12 +41,6 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
-/** @brief The LKM initialization function
- *  The static keyword restricts the visibility of the function to within this C file. The __init
- *  macro means that for a built-in driver (not a LKM) the function is only used at initialization
- *  time and that it can be discarded and its memory freed up after that point.
- *  @return returns 0 if successful
- */
 static int __init opsysmem_init(void){
    printk(KERN_INFO "opsysmem: Initializing the opsysmem LKM\n");
 
@@ -68,7 +50,7 @@ static int __init opsysmem_init(void){
       printk(KERN_ALERT "opsysmem failed to register a major number\n");
       return majorNumber;
    }
-   printk(KERN_INFO "opsysmem: registered correctly with major number %d\n", majorNumber);
+   printk(KERN_INFO "opsysmem: registered correctly with major number (%d)\n", majorNumber);
 
    // Register the device class
    opsysmemClass = class_create(THIS_MODULE, CLASS_NAME);
@@ -88,6 +70,7 @@ static int __init opsysmem_init(void){
       return PTR_ERR(opsysmemDevice);
    }
    printk(KERN_INFO "opsysmem: device class created correctly\n"); // Made it! device was initialized
+   msgs = kmalloc(INITIAL_CAPACITY * sizeof(char*), GFP_KERNEL);
    mutex_init(&opsysmem_mutex);          // Initialize the mutex dynamically
    return 0;
 }
@@ -153,10 +136,17 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
  *  @param offset The offset if required
  */
 static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
+   strcat(message,buffer);
+   if(len > MSG_MAX_SIZE){
+      
+   }
+   if(size_of_messages + len > LIST_MAX_SIZE){
 
-   sprintf(message, "%s(%zu letters)", buffer, len);   // appending received string with its length
+   }
+   // sprintf(message, "%s(%zu letters)", buffer, len);   // appending received string with its length
    size_of_message = strlen(message);                 // store the length of the stored message
-   printk(KERN_INFO "opsysmem: Received %zu characters from the user\n", len);
+   printk(KERN_INFO "opsysmem: Received %zu characters from the user: (%s)\n", len,buffer);
+   printk(KERN_INFO "opsysmem: message = (%s)\n",message);
    return len;
 }
 
@@ -167,6 +157,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
  */
 static int dev_release(struct inode *inodep, struct file *filep){
    mutex_unlock(&opsysmem_mutex);                      // release the mutex (i.e., lock goes up)
+   kfree(msgs);
    printk(KERN_INFO "opsysmem: Device successfully closed\n");
    return 0;
 }
