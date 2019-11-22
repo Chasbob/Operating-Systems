@@ -18,7 +18,7 @@
 #include <asm/uaccess.h>          // Required for the copy to user function
 #include <linux/mutex.h>	  // Required for the mutex functionality
 #define  DEVICE_NAME "ebbchar"    ///< The device will appear at /dev/ebbchar using this value
-#define  CLASS_NAME  "ebb"        ///< The device class -- this is a character device driver
+// #define  CLASS_NAME  "ebb"        ///< The device class -- this is a character device driver
 
 MODULE_LICENSE("GPL");            ///< The license type -- this affects available functionality
 MODULE_AUTHOR("Derek Molloy");    ///< The author -- visible when you use modinfo
@@ -29,8 +29,6 @@ static int    majorNumber;                  ///< Store the device number -- dete
 static char   message[256] = {0};           ///< Memory for the string that is passed from userspace
 static short  size_of_message;              ///< Used to remember the size of the string stored
 static int    numberOpens = 0;              ///< Counts the number of times the device is opened
-static struct class*  ebbcharClass  = NULL; ///< The device-driver class struct pointer
-static struct device* ebbcharDevice = NULL; ///< The device-driver device struct pointer
 
 static DEFINE_MUTEX(ebbchar_mutex);	    ///< Macro to declare a new mutex
 
@@ -70,24 +68,6 @@ static int __init ebbchar_init(void){
    }
    printk(KERN_INFO "EBBChar: registered correctly with major number %d\n", majorNumber);
 
-   // Register the device class
-   ebbcharClass = class_create(THIS_MODULE, CLASS_NAME);
-   if (IS_ERR(ebbcharClass)){           // Check for error and clean up if there is
-      unregister_chrdev(majorNumber, DEVICE_NAME);
-      printk(KERN_ALERT "Failed to register device class\n");
-      return PTR_ERR(ebbcharClass);     // Correct way to return an error on a pointer
-   }
-   printk(KERN_INFO "EBBChar: device class registered correctly\n");
-
-   // Register the device driver
-   ebbcharDevice = device_create(ebbcharClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
-   if (IS_ERR(ebbcharDevice)){          // Clean up if there is an error
-      class_destroy(ebbcharClass);      // Repeated code but the alternative is goto statements
-      unregister_chrdev(majorNumber, DEVICE_NAME);
-      printk(KERN_ALERT "Failed to create the device\n");
-      return PTR_ERR(ebbcharDevice);
-   }
-   printk(KERN_INFO "EBBChar: device class created correctly\n"); // Made it! device was initialized
    mutex_init(&ebbchar_mutex);          // Initialize the mutex dynamically
    return 0;
 }
@@ -97,10 +77,6 @@ static int __init ebbchar_init(void){
  *  code is used for a built-in driver (not a LKM) that this function is not required.
  */
 static void __exit ebbchar_exit(void){
-   mutex_destroy(&ebbchar_mutex);                       // destroy the dynamically-allocated mutex
-   device_destroy(ebbcharClass, MKDEV(majorNumber, 0)); // remove the device
-   class_unregister(ebbcharClass);                      // unregister the device class
-   class_destroy(ebbcharClass);                         // remove the device class
    unregister_chrdev(majorNumber, DEVICE_NAME);         // unregister the major number
    printk(KERN_INFO "EBBChar: Goodbye from the LKM!\n");
 }
