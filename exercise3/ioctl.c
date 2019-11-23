@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "ioctl.h"
+#include "queue.h"
 
 int main (int argc, char **argv) {
     
