@@ -19,7 +19,7 @@ static int    Major;                  ///< Store the device number -- determined
 // static int  size_of_message;              ///< Used to remember the size of the string stored
 static int    numberOpens = 0;              ///< Counts the number of times the device is opened
 static struct Queue* messages;
-static int counter = 0;
+// static int counter = 0;
 static short total_size = 0;
 // static short message_count = 0;
 

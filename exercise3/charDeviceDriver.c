@@ -8,17 +8,10 @@
 #include <linux/mutex.h>  // Required for the mutex functionality
 #include <linux/slab.h>
 #include "ioctl.h"
-// #include "queue.h"
 #include "charDeviceDriver.h"
+
 MODULE_LICENSE("GPL");										  ///< The license type -- this affects available functionality
-// MODULE_AUTHOR("Derek Molloy");								  ///< The author -- visible when you use modinfo
-// MODULE_DESCRIPTION("A simple Linux char driver for the BBB"); ///< The description -- see modinfo
-// MODULE_VERSION("0.1");										  ///< A version number to inform users
 
-
-static int length = 0;
-static int bytes_read = 0;
-// static char* msg_ptr = 0;
 struct QNode
 {
 	char *key;
@@ -155,11 +148,7 @@ static long device_ioctl(struct file *file,		 /* see include/linux/fs.h */
 	 */
 	if (ioctl_num == RESET_COUNTER)
 	{
-		counter = 0;
-		/* 	    return 0; */
-		return 5; /* can pass integer as return value */
-	}
-	if (ioctl_num == 0){
+		printk(KERN_INFO "charDeviceDriver ioctl: trying to set size to (%i)/(%lu)",total_size,ioctl_param);
 		if(ioctl_param > total_size){
 			LIST_MAX_SIZE = ioctl_param;
 			return 0;
@@ -239,6 +228,9 @@ static int device_open(struct inode *inodep, struct file *filep)
  */
 static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
+	int length = 0;
+	int init_length = 0;
+	int bytes_read = 0;
 	int result;
 	struct QNode *temp;
 	char *str;
@@ -251,6 +243,7 @@ static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t 
 	}
 	printk(KERN_INFO "charDeviceDriver device_read: got message of length (%i)", temp->length);
 	length = temp->length;
+	init_length = length;
 	if(temp->key ==NULL){
 		printk(KERN_INFO "charDeviceDriver read: message was NULL\n");
 		return -EAGAIN;
@@ -272,6 +265,7 @@ static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t 
 		bytes_read++;
 	}
 	deQueue(messages);
+	total_size = total_size - init_length;
 	/* 
 	 * Most read functions return the number of bytes put into the buffer
 	 */
@@ -298,7 +292,7 @@ static ssize_t device_write(struct file *filep, const char *buffer, size_t len, 
 	}
 	if (total_size + len > LIST_MAX_SIZE)
 	{
-		printk(KERN_INFO "charDeviceDriver: This op would exced max size of %i\n", MSG_MAX_SIZE);
+		printk(KERN_INFO "charDeviceDriver: This op would exced max size of %i\n", LIST_MAX_SIZE);
 		return -EAGAIN;
 	}
 	enQueue(messages, (char*)buffer, len);

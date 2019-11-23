@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "ioctl.h"
-#include "queue.h"
 
 int main (int argc, char **argv) {
     
@@ -27,7 +26,7 @@ int main (int argc, char **argv) {
 	exit (1);
     }
 
-    result = ioctl (fd, RESET_COUNTER, 0);
+    result = ioctl (fd, RESET_COUNTER, 2);
     printf ("The result of the ioctl is %d\n", result);
     
     close (fd);
