@@ -11,10 +11,10 @@ static long device_ioctl(struct file *file, unsigned int ioctl_num, unsigned lon
 #define SUCCESS 0
 #define DEVICE_NAME "opsysmem"	/* Dev name as it appears in /proc/devices   */
 #define BUF_LEN 80		/* Max length of the message from the device */
-#define LIST_MAX_SIZE      4194304
 #define MSG_MAX_SIZE       4096
 #define INITIAL_CAPACITY   1
 
+static int	  LIST_MAX_SIZE      = 4194304;
 static int    Major;                  ///< Store the device number -- determined automatically
 // static int  size_of_message;              ///< Used to remember the size of the string stored
 static int    numberOpens = 0;              ///< Counts the number of times the device is opened

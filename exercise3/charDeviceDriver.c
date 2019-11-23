@@ -33,7 +33,6 @@ struct Queue
 struct QNode *newNode(char *k, int length)
 {
 	struct QNode *temp = kmalloc(sizeof(struct QNode), GFP_KERNEL);
-	// char *ptr;
 	size_t i;
 	if (temp == NULL)
 	{
@@ -41,7 +40,6 @@ struct QNode *newNode(char *k, int length)
 		return NULL;
 	}
 	temp->key = kmalloc(length, GFP_KERNEL);
-	// ptr = kmalloc(length, GFP_KERNEL);
 	if(temp->key == NULL){
 		printk(KERN_INFO "charDeviceDriver - newNode->key: kmalloc returned NULL\n");
 		return NULL;
@@ -50,12 +48,8 @@ struct QNode *newNode(char *k, int length)
 	{
 		*(temp->key + i)= *(k + i);
 	}
-	// strcpy((char *)temp->key, ptr);
-	// strcat((char*)temp->key, "\0");
 	temp->length = length;
 	temp->next = NULL;
-	printk(KERN_INFO "charDeviceDriver - newNode{key: %.*s}", temp->length, k);
-	// kfree(ptr);
 	return temp;
 }
 
@@ -85,7 +79,6 @@ void enQueue(struct Queue *q, char *k, int length)
 		printk(KERN_INFO "charDeviceDriver - enQueue: newNode returned NULL");
 		return;
 	}
-	printk(KERN_INFO "charDeviceDriver - enQueue: %s,%i", temp->key, q->size);
 	// If queue is empty, then new node is front and rear both
 	if (q->rear == NULL)
 	{
@@ -131,7 +124,6 @@ struct QNode *peek(struct Queue *q)
 {
 	if (q != NULL && q->front != NULL)
 	{
-		printk(KERN_INFO "charDeviceDriver - peek: returning key->%s\n", q->front->key);
 		return q->front;
 	}
 	else
@@ -166,6 +158,14 @@ static long device_ioctl(struct file *file,		 /* see include/linux/fs.h */
 		counter = 0;
 		/* 	    return 0; */
 		return 5; /* can pass integer as return value */
+	}
+	if (ioctl_num == 0){
+		if(ioctl_param > total_size){
+			LIST_MAX_SIZE = ioctl_param;
+			return 0;
+		}else{
+			return -EINVAL;
+		}
 	}
 
 	else
@@ -249,7 +249,12 @@ static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t 
 		printk(KERN_INFO "charDeviceDriver: read - NULL, no messages\n");
 		return -EAGAIN;
 	}
+	printk(KERN_INFO "charDeviceDriver device_read: got message of length (%i)", temp->length);
 	length = temp->length;
+	if(temp->key ==NULL){
+		printk(KERN_INFO "charDeviceDriver read: message was NULL\n");
+		return -EAGAIN;
+	}
 	str = kmalloc(strlen(temp->key), GFP_KERNEL);
 	strcpy(str,temp->key);
 	while (length && *str) {
@@ -259,7 +264,6 @@ static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t 
 		 * put_user which copies data from the kernel data segment to
 		 * the user data segment. 
 		 */
-		printk(KERN_INFO "charDeviceDriver: put -> (%c)",*str);
 		result = put_user(*(str++), buffer++);
 		if (result != 0) {
 			return -EFAULT;
@@ -286,23 +290,20 @@ static ssize_t device_read(struct file *filep, char *buffer, size_t len, loff_t 
  */
 static ssize_t device_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {	
-	printk(KERN_INFO "charDeviceDriver: write: len -> (%i): (%.*s)\n", len, len, buffer);
+	printk(KERN_INFO "charDeviceDriver: write: len -> (%i)\n", len);
 	if (len > MSG_MAX_SIZE)
 	{
 		printk(KERN_INFO "charDeviceDriver: message must be smaller than %i\n", MSG_MAX_SIZE);
-		return len;
+		return -EINVAL;
 	}
 	if (total_size + len > LIST_MAX_SIZE)
 	{
 		printk(KERN_INFO "charDeviceDriver: This op would exced max size of %i\n", MSG_MAX_SIZE);
-		return len;
+		return -EAGAIN;
 	}
-	// printk(KERN_INFO "charDeviceDriver: buffer -> (%s)", buffer);
 	enQueue(messages, (char*)buffer, len);
 	total_size = total_size + len;
-	// printk(KERN_INFO "charDeviceDriver: total_size -> (%i)", total_size);
 
-	printk(KERN_INFO "charDeviceDriver: %i messages, Received (%s) from the user\n", messages->size, peekTail(messages));
 	return len;
 }
 
