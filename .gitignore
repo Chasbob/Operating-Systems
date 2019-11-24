@@ -10,3 +10,14 @@ exercise1/sort_simple/sort
 exercise1/sort_simple/sort.o
 
 **/.DS_Store
+exercise3/ebbcharmutex/.tmp_versions/
+
+*.cmd
+
+*.o
+
+*.order
+
+*.symvers
+
+*.ko
