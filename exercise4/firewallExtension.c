@@ -69,8 +69,9 @@ void print_list(void)
   char buffer[BUFFERSIZE];
   char* path;
   rule *c = head;
-  printk(KERN_INFO "print: c={%p}", c);
-  printk(KERN_INFO "print: c.port={%d}, c.exe={%p}, c.next={%p}", c->port, c->exe, c->next);
+  if(c->port == 0 && c->exe == NULL){
+    return;
+  }
   while (c != NULL)
   {
     path = dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE);
@@ -99,6 +100,22 @@ int allowed(int port, struct path path){
 
   return -1;
 }
+
+void clear(void)
+{
+  rule *c = head;
+  rule *n;
+  while (c != NULL)
+  {
+    c->next = n;
+    kfree(c->exe);
+    if(n != NULL){
+      kfree(c);
+    }
+    c = n;
+  }
+}
+
 void addRule(char *raw, int size)
 {
   char *portStr;
@@ -258,6 +275,9 @@ ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, 
     addRule(raw, count - 2);
     printk(KERN_INFO "Add rule {%.*s}\n", count - 2, command + 2);
     break;
+  case 'R':
+    clear();
+    printk("end\n");
   default:
     printk(KERN_INFO "kernelWrite: Illegal command \n");
   }
