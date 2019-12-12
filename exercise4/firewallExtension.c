@@ -108,11 +108,16 @@ void clear(void)
   while (c != NULL)
   {
     c->next = n;
-    kfree(c->exe);
-    if(n != NULL){
-      kfree(c);
+    if(n == NULL){
+      kfree(c->exe);
+      c->exe = NULL;
+      c->port = 0;
+      return;
+    }else{
+      kfree(c->exe);
+      c->port = 0;
+      c = n;
     }
-    c = n;
   }
 }
 
@@ -277,7 +282,7 @@ ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, 
     break;
   case 'R':
     clear();
-    printk("end\n");
+    break;
   default:
     printk(KERN_INFO "kernelWrite: Illegal command \n");
   }

@@ -6,20 +6,20 @@
 #define BUFFERSIZE 80
 int main(int argc, char *argv[])
 {
-    printf("test");
     FILE *fp;
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
     char buffer[BUFFERSIZE];
-    printf("%s\n",argv[2]);
     if (argc == 2 && strcmp(argv[1], "L"))
     {
-        printf("list rules\n");
+        snprintf(buffer, BUFFERSIZE, "echo -n \"L\" > /proc/firewallExtension");
+        system(buffer);
     }
-    else if (argc == 3)
+    if (argc == 3)
     {
-        printf("argv[2] = %s\n", argv[2]);
+        snprintf(buffer, BUFFERSIZE, "echo -n \"R\" > /proc/firewallExtension");
+        system(buffer);
         fp = fopen(argv[2], "r");
         if (fp == NULL)
             exit(EXIT_FAILURE);
@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
         {
             strtok(line,"\n");
             snprintf(buffer, BUFFERSIZE, "echo -n \"A %.*s\" > /proc/firewallExtension",(int)len-2, line);
-            printf("%s\n", buffer);
             system(buffer);
         }
         fclose(fp);
