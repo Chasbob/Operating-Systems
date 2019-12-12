@@ -140,8 +140,8 @@ ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, 
   case 'L':
     printk(KERN_INFO "List rules\n");
     break;
-  case 'W':
-    printk(KERN_INFO "Write rules from file %.*s\n",count - 2,command + 2);
+  case 'A':
+    printk(KERN_INFO "Add rule {%.*s}\n",count - 2,command + 2);
     break;
   default:
     printk(KERN_INFO "kernelWrite: Illegal command \n");
