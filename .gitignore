@@ -21,3 +21,5 @@ exercise3/ebbcharmutex/.tmp_versions/
 *.symvers
 
 *.ko
+
+examples/
