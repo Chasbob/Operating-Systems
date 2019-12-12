@@ -15,10 +15,9 @@ MODULE_LICENSE("GPL");
 
 /* make IP4-addresses readable */
 
-#define PROC_ENTRY_FILENAME "kernelWrite"
+#define PROC_ENTRY_FILENAME "firewallExtension"
 
 DECLARE_RWSEM(counter_sem); /* semaphore to protect counter access */
-
 #define BUFFERSIZE 80
 #define NIPQUAD(addr)              \
   ((unsigned char *)&addr)[0],     \
@@ -26,6 +25,14 @@ DECLARE_RWSEM(counter_sem); /* semaphore to protect counter access */
       ((unsigned char *)&addr)[2], \
       ((unsigned char *)&addr)[3]
 
+typedef struct firewallRule
+{
+  struct firewallRule * next;
+  int port;
+  struct path *exe;
+} rule;
+
+rule *head;
 struct nf_hook_ops *reg;
 static struct proc_dir_entry *Our_Proc_File;
 
@@ -34,6 +41,84 @@ static struct proc_dir_entry *Our_Proc_File;
 #error "Kernel version < 4.4 not supported!"
 //kernels < 4.4 need another firewallhook!
 #endif
+// Push rule to list
+void push(int port, struct path* exe) {
+    rule *c = head;
+    printk(KERN_INFO "push: c={%p}",c);
+    printk(KERN_INFO "push: c.port={%d},c.exe={%p},c.next={%p}",c->port,c->exe,c->next);
+    if(c->port == 0){
+      c->port = port;
+      c->exe = exe;
+      return;
+    }
+    while (c->next != NULL) {
+        c = c->next;
+    }
+    /* now we can add a new variable */
+    c->next = kmalloc(sizeof(rule), GFP_KERNEL);
+    c->next->port = port;
+    c->next->exe = exe;
+    c->next->next = NULL;
+}
+
+void print_list(void) {
+    // char path[BUFFERSIZE];
+    rule * c = head;
+    printk(KERN_INFO "print: c={%p}", c);
+    printk(KERN_INFO "print: c.port={%d}, c.exe={%p}, c.next={%p}", c->port, c->exe, c->next);
+    while (c != NULL) {
+        // d_path(c->exe, path, BUFFERSIZE);
+        // path = c->exe->dentry->d_name.name;
+        printk(KERN_INFO "RULE: port => {%d}, exe => {%s}", c->port, c->exe->dentry->d_name.name);
+        c = c->next;
+    }
+}
+
+
+
+
+
+void addRule(char *raw, int size)
+{
+  char* portStr;
+  char* exeStr;
+  int portLen;
+  int exeLen;
+  int index = 0;
+  int pathResult;
+  struct path *path;
+  long port;
+  printk(KERN_INFO "addRule: size: {%d}, raw: {%.*s}", size, size, raw);
+
+  // Find the split between port and path
+  while (*(raw + index) != ' ' && index < size)
+  {
+    index++;
+  }
+  portLen = ++index;
+  exeLen = size - index + 1;
+  portStr = kmalloc(portLen, GFP_KERNEL);
+  exeStr = kmalloc(exeLen, GFP_KERNEL);
+  if (portStr == NULL){
+    printk(KERN_ERR "kmalloc returned NULL for portStr\n");
+  }
+  if (exeStr == NULL){
+    printk(KERN_ERR "kmalloc returned NULL for exeStr\n");
+  }
+  snprintf(portStr, portLen, "%.*s", portLen, raw);
+  snprintf(exeStr, exeLen,"%.*s", exeLen, raw + index);
+  printk(KERN_INFO "port: {%.*s}\n", portLen, portStr);
+  printk(KERN_INFO "exe: {%.*s}\n", exeLen, exeStr);
+  path = kmalloc(sizeof(struct path), GFP_KERNEL);
+  pathResult = kern_path(exeStr, LOOKUP_FOLLOW, path);
+  printk(KERN_INFO "pathResult: {%d}\n",pathResult); 
+  kstrtol(portStr, 10, &port);
+  printk(KERN_INFO "port as int: {%lu}\n",port);
+  push(port, path);
+  kfree(portStr);
+  kfree(exeStr);
+}
+
 unsigned int FirewallExtensionHook(void *priv,
                                    struct sk_buff *skb,
                                    const struct nf_hook_state *state)
@@ -109,39 +194,44 @@ unsigned int FirewallExtensionHook(void *priv,
   return NF_ACCEPT;
 }
 
-char *ins(const char *buffer, int length)
+char *read_buffer(const char *buffer, int length)
 {
-    char *temp;
-    size_t i;
-    temp = kmalloc(length, GFP_KERNEL);
-    if (temp == NULL)
-    {
-        printk(KERN_INFO "charDeviceDriver - newNode->key: kmalloc returned NULL\n");
-        return NULL;
-    }
-    for (i = 0; i < length; i++)
-    {
-        printk ("{%c}",*buffer);
-        *(temp + i) = *(buffer + i);
-    }
-    return temp;
+  char *temp;
+  size_t i;
+  temp = kmalloc(length, GFP_KERNEL);
+  if (temp == NULL)
+  {
+    printk(KERN_INFO "charDeviceDriver - newNode->key: kmalloc returned NULL\n");
+    return NULL;
+  }
+  for (i = 0; i < length; i++)
+  {
+    printk("{%c}", *buffer);
+    *(temp + i) = *(buffer + i);
+  }
+  return temp;
 }
 
 ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, loff_t *offset)
 {
 
-  char* command;
+  char raw[BUFFERSIZE];
+  char *command;
   // int res;
   printk(KERN_INFO "kernelWrite entered\n");
-  command = ins(buffer, count);
+  command = read_buffer(buffer, count);
   printk(KERN_INFO "kernelWrite: size: {%i}, command: {%.*s}\n", count, count, command);
   switch (*command)
   {
   case 'L':
     printk(KERN_INFO "List rules\n");
+    print_list();
     break;
   case 'A':
-    printk(KERN_INFO "Add rule {%.*s}\n",count - 2,command + 2);
+    snprintf(raw, BUFFERSIZE, "%.*s", count - 2, command + 2);
+    printk(KERN_INFO "raw: {%.*s}\n",count - 2, raw);
+    addRule(raw, count - 2);
+    printk(KERN_INFO "Add rule {%.*s}\n", count - 2, command + 2);
     break;
   default:
     printk(KERN_INFO "kernelWrite: Illegal command \n");
@@ -205,6 +295,15 @@ int init_module(void)
   {
     printk(KERN_INFO "Firewall extensions module loaded\n");
   }
+
+  head = kmalloc(sizeof(rule), GFP_KERNEL);
+  if (head == NULL){
+    printk(KERN_INFO "firewall init: kmalloc returned NULL\n");
+    return -ENOMEM;
+  }
+  head->next = NULL;
+  head->exe = NULL;
+  head->port = 0;
   return 0; /* success */
 }
 
