@@ -69,8 +69,9 @@ void print_list(void)
   char buffer[BUFFERSIZE];
   char* path;
   rule *c = head;
-  printk(KERN_INFO "print: c={%p}", c);
-  printk(KERN_INFO "print: c.port={%d}, c.exe={%p}, c.next={%p}", c->port, c->exe, c->next);
+  if(c->port == 0 && c->exe == NULL){
+    return;
+  }
   while (c != NULL)
   {
     path = dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE);
@@ -83,10 +84,13 @@ int allowed(int port, struct path path){
   char buffer[BUFFERSIZE];
   rule *c = head;
   printk(KERN_INFO "allowed: port => {%d}, path => {%s}\n",port,dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE));
+  if(c->port == 0 && c->exe == NULL){
+    return 1;
+  }
   while (c != NULL)
   {
-    printk(KERN_INFO "\n");
     if(path.dentry->d_inode == c->exe->dentry->d_inode){
+    printk(KERN_INFO "allowed: port => {%d}, path => {%s}\n",port,dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE));
       if(c->port == port){
         return 1;
       }
@@ -96,6 +100,27 @@ int allowed(int port, struct path path){
 
   return -1;
 }
+
+void clear(void)
+{
+  rule *c = head;
+  rule *n;
+  while (c != NULL)
+  {
+    c->next = n;
+    if(n == NULL){
+      kfree(c->exe);
+      c->exe = NULL;
+      c->port = 0;
+      return;
+    }else{
+      kfree(c->exe);
+      c->port = 0;
+      c = n;
+    }
+  }
+}
+
 void addRule(char *raw, int size)
 {
   char *portStr;
@@ -149,10 +174,9 @@ unsigned int FirewallExtensionHook(void *priv,
   struct tcphdr _tcph;
   struct sock *sk;
   struct mm_struct *mm;
-  struct dentry *procDentry;
-  struct dentry *parent;
   pid_t mod_pid;
   char cmdlineFile[BUFFERSIZE];
+  char buffer[BUFFERSIZE];
   int res;
   sk = skb->sk;
   if (!sk)
@@ -183,10 +207,7 @@ unsigned int FirewallExtensionHook(void *priv,
     snprintf(cmdlineFile, BUFFERSIZE, "/proc/%d/exe", mod_pid);
     res = kern_path(cmdlineFile, LOOKUP_FOLLOW, &path);
     printk(KERN_INFO "firewall: Starting connection \n");
-    procDentry = path.dentry;
-    parent = procDentry->d_parent;
-    printk(KERN_INFO "the name is %s\n", procDentry->d_name.name);
-    printk(KERN_INFO "the name of the parent is %s\n", parent->d_name.name);
+    printk(KERN_INFO "the name is %s\n", dentry_path_raw(path.dentry, buffer, BUFFERSIZE));
     ip = ip_hdr(skb);
     if (!ip)
     {
@@ -258,6 +279,9 @@ ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, 
     printk(KERN_INFO "raw: {%.*s}\n", count - 2, raw);
     addRule(raw, count - 2);
     printk(KERN_INFO "Add rule {%.*s}\n", count - 2, command + 2);
+    break;
+  case 'R':
+    clear();
     break;
   default:
     printk(KERN_INFO "kernelWrite: Illegal command \n");

@@ -69,7 +69,7 @@ char *ins(const char *buffer, int length)
 ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, loff_t *offset)
 {
 
-    char *command;
+    char* command;
     // int res;
     printk(KERN_INFO "kernelWrite entered\n");
     // get_user(command, buffer);
@@ -78,18 +78,18 @@ ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, 
     // {
     //     return -EFAULT;
     // }
-    // printk(KERN_INFO "kernelWrite: size: {%i}, command: {%s}", count, command);
-    // switch (command)
-    // {
-    // case INCREASE_COUNTER:
-    //     increase_counter();
-    //     break;
-    // case SHOW_COUNTER:
-    //     show_table();
-    //     break;
-    // default:
-    //     printk(KERN_INFO "kernelWrite: Illegal command \n");
-    // }
+    printk(KERN_INFO "kernelWrite: size: {%i}, command: {%.*s}", count, count, command);
+    switch (*command)
+    {
+    case INCREASE_COUNTER:
+        increase_counter();
+        break;
+    case SHOW_COUNTER:
+        show_table();
+        break;
+    default:
+        printk(KERN_INFO "kernelWrite: Illegal command \n");
+    }
     return count;
 }
 

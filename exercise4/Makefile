@@ -15,5 +15,8 @@ clean:
 install:	
 	make -C $(KERNELDIR) M=$(PWD) modules_install
 
+firewallSetup:
+	gcc firewallSetup.c -o Setup/firewallSetup 
+
 quickInstall:
 	cp $(MODULES) /lib/modules/`uname -r`/extra
