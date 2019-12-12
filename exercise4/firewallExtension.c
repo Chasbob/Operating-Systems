@@ -66,15 +66,15 @@ void push(int port, struct path *exe)
 
 void print_list(void)
 {
-  // char path[BUFFERSIZE];
+  char buffer[BUFFERSIZE];
+  char* path;
   rule *c = head;
   printk(KERN_INFO "print: c={%p}", c);
   printk(KERN_INFO "print: c.port={%d}, c.exe={%p}, c.next={%p}", c->port, c->exe, c->next);
   while (c != NULL)
   {
-    // d_path(c->exe, path, BUFFERSIZE);
-    // path = c->exe->dentry->d_name.name;
-    printk(KERN_INFO "RULE: port => {%d}, exe => {%s}", c->port, c->exe->dentry->d_name.name);
+    path = dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE);
+    printk(KERN_INFO "RULE: port => {%d}, exe => {%s}", c->port, path);
     c = c->next;
   }
 }

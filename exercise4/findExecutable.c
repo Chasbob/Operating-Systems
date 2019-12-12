@@ -6,6 +6,9 @@
 #include <linux/namei.h>
 #include <linux/sched.h>
 #include <linux/dcache.h>
+#include <linux/proc_fs.h>
+#include <linux/slab.h>
+#include <asm/uaccess.h>
 
 #define BUFFERSIZE 80
 
@@ -24,10 +27,12 @@ int init_module(void)
     struct path p1;
     struct path p2;
     char cmdlineFile[BUFFERSIZE];
+    char buffer[BUFFERSIZE];
     int res;
     int resP1;
     int resP2;
     int resEQ;
+    char* rawPath;
     printk(KERN_INFO "findExecutable module loading\n");
     /* current is pre-defined pointer to task structure of currently running task */
     mod_pid = current->pid;
@@ -51,6 +56,8 @@ int init_module(void)
     printk(KERN_INFO "the name of the parent is %s\n", parent->d_name.name);
     printk(KERN_INFO "The name of the pp is %s\n", pp->d_name.name);
     printk(KERN_INFO "The name of the ppp is %s\n", ppp->d_name.name);
+    rawPath = dentry_path_raw(path.dentry, buffer, BUFFERSIZE);
+    printk(KERN_INFO "rawPath => {%s}\n",rawPath);
     path_put(&path);
     return 0;
 }
