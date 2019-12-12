@@ -27,7 +27,7 @@ DECLARE_RWSEM(counter_sem); /* semaphore to protect counter access */
 
 typedef struct firewallRule
 {
-  struct firewallRule * next;
+  struct firewallRule *next;
   int port;
   struct path *exe;
 } rule;
@@ -42,46 +42,47 @@ static struct proc_dir_entry *Our_Proc_File;
 //kernels < 4.4 need another firewallhook!
 #endif
 // Push rule to list
-void push(int port, struct path* exe) {
-    rule *c = head;
-    printk(KERN_INFO "push: c={%p}",c);
-    printk(KERN_INFO "push: c.port={%d},c.exe={%p},c.next={%p}",c->port,c->exe,c->next);
-    if(c->port == 0){
-      c->port = port;
-      c->exe = exe;
-      return;
-    }
-    while (c->next != NULL) {
-        c = c->next;
-    }
-    /* now we can add a new variable */
-    c->next = kmalloc(sizeof(rule), GFP_KERNEL);
-    c->next->port = port;
-    c->next->exe = exe;
-    c->next->next = NULL;
+void push(int port, struct path *exe)
+{
+  rule *c = head;
+  printk(KERN_INFO "push: c={%p}", c);
+  printk(KERN_INFO "push: c.port={%d},c.exe={%p},c.next={%p}", c->port, c->exe, c->next);
+  if (c->port == 0)
+  {
+    c->port = port;
+    c->exe = exe;
+    return;
+  }
+  while (c->next != NULL)
+  {
+    c = c->next;
+  }
+  /* now we can add a new variable */
+  c->next = kmalloc(sizeof(rule), GFP_KERNEL);
+  c->next->port = port;
+  c->next->exe = exe;
+  c->next->next = NULL;
 }
 
-void print_list(void) {
-    // char path[BUFFERSIZE];
-    rule * c = head;
-    printk(KERN_INFO "print: c={%p}", c);
-    printk(KERN_INFO "print: c.port={%d}, c.exe={%p}, c.next={%p}", c->port, c->exe, c->next);
-    while (c != NULL) {
-        // d_path(c->exe, path, BUFFERSIZE);
-        // path = c->exe->dentry->d_name.name;
-        printk(KERN_INFO "RULE: port => {%d}, exe => {%s}", c->port, c->exe->dentry->d_name.name);
-        c = c->next;
-    }
+void print_list(void)
+{
+  // char path[BUFFERSIZE];
+  rule *c = head;
+  printk(KERN_INFO "print: c={%p}", c);
+  printk(KERN_INFO "print: c.port={%d}, c.exe={%p}, c.next={%p}", c->port, c->exe, c->next);
+  while (c != NULL)
+  {
+    // d_path(c->exe, path, BUFFERSIZE);
+    // path = c->exe->dentry->d_name.name;
+    printk(KERN_INFO "RULE: port => {%d}, exe => {%s}", c->port, c->exe->dentry->d_name.name);
+    c = c->next;
+  }
 }
-
-
-
-
 
 void addRule(char *raw, int size)
 {
-  char* portStr;
-  char* exeStr;
+  char *portStr;
+  char *exeStr;
   int portLen;
   int exeLen;
   int index = 0;
@@ -99,21 +100,23 @@ void addRule(char *raw, int size)
   exeLen = size - index + 1;
   portStr = kmalloc(portLen, GFP_KERNEL);
   exeStr = kmalloc(exeLen, GFP_KERNEL);
-  if (portStr == NULL){
+  if (portStr == NULL)
+  {
     printk(KERN_ERR "kmalloc returned NULL for portStr\n");
   }
-  if (exeStr == NULL){
+  if (exeStr == NULL)
+  {
     printk(KERN_ERR "kmalloc returned NULL for exeStr\n");
   }
   snprintf(portStr, portLen, "%.*s", portLen, raw);
-  snprintf(exeStr, exeLen,"%.*s", exeLen, raw + index);
+  snprintf(exeStr, exeLen, "%.*s", exeLen, raw + index);
   printk(KERN_INFO "port: {%.*s}\n", portLen, portStr);
   printk(KERN_INFO "exe: {%.*s}\n", exeLen, exeStr);
   path = kmalloc(sizeof(struct path), GFP_KERNEL);
   pathResult = kern_path(exeStr, LOOKUP_FOLLOW, path);
-  printk(KERN_INFO "pathResult: {%d}\n",pathResult); 
+  printk(KERN_INFO "pathResult: {%d}\n", pathResult);
   kstrtol(portStr, 10, &port);
-  printk(KERN_INFO "port as int: {%lu}\n",port);
+  printk(KERN_INFO "port as int: {%lu}\n", port);
   push(port, path);
   kfree(portStr);
   kfree(exeStr);
@@ -229,7 +232,7 @@ ssize_t kernelWrite(struct file *file, const char __user *buffer, size_t count, 
     break;
   case 'A':
     snprintf(raw, BUFFERSIZE, "%.*s", count - 2, command + 2);
-    printk(KERN_INFO "raw: {%.*s}\n",count - 2, raw);
+    printk(KERN_INFO "raw: {%.*s}\n", count - 2, raw);
     addRule(raw, count - 2);
     printk(KERN_INFO "Add rule {%.*s}\n", count - 2, command + 2);
     break;
@@ -297,7 +300,8 @@ int init_module(void)
   }
 
   head = kmalloc(sizeof(rule), GFP_KERNEL);
-  if (head == NULL){
+  if (head == NULL)
+  {
     printk(KERN_INFO "firewall init: kmalloc returned NULL\n");
     return -ENOMEM;
   }
