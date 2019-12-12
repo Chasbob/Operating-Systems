@@ -83,10 +83,13 @@ int allowed(int port, struct path path){
   char buffer[BUFFERSIZE];
   rule *c = head;
   printk(KERN_INFO "allowed: port => {%d}, path => {%s}\n",port,dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE));
+  if(c->port == 0 && c->exe == NULL){
+    return 1;
+  }
   while (c != NULL)
   {
-    printk(KERN_INFO "\n");
     if(path.dentry->d_inode == c->exe->dentry->d_inode){
+    printk(KERN_INFO "allowed: port => {%d}, path => {%s}\n",port,dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE));
       if(c->port == port){
         return 1;
       }
@@ -149,10 +152,9 @@ unsigned int FirewallExtensionHook(void *priv,
   struct tcphdr _tcph;
   struct sock *sk;
   struct mm_struct *mm;
-  struct dentry *procDentry;
-  struct dentry *parent;
   pid_t mod_pid;
   char cmdlineFile[BUFFERSIZE];
+  char buffer[BUFFERSIZE];
   int res;
   sk = skb->sk;
   if (!sk)
@@ -183,10 +185,7 @@ unsigned int FirewallExtensionHook(void *priv,
     snprintf(cmdlineFile, BUFFERSIZE, "/proc/%d/exe", mod_pid);
     res = kern_path(cmdlineFile, LOOKUP_FOLLOW, &path);
     printk(KERN_INFO "firewall: Starting connection \n");
-    procDentry = path.dentry;
-    parent = procDentry->d_parent;
-    printk(KERN_INFO "the name is %s\n", procDentry->d_name.name);
-    printk(KERN_INFO "the name of the parent is %s\n", parent->d_name.name);
+    printk(KERN_INFO "the name is %s\n", dentry_path_raw(path.dentry, buffer, BUFFERSIZE));
     ip = ip_hdr(skb);
     if (!ip)
     {
