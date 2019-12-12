@@ -78,7 +78,24 @@ void print_list(void)
     c = c->next;
   }
 }
+int allowed(int port, struct path path){
 
+  char buffer[BUFFERSIZE];
+  rule *c = head;
+  printk(KERN_INFO "allowed: port => {%d}, path => {%s}\n",port,dentry_path_raw(c->exe->dentry, buffer, BUFFERSIZE));
+  while (c != NULL)
+  {
+    printk(KERN_INFO "\n");
+    if(path.dentry->d_inode == c->exe->dentry->d_inode){
+      if(c->port == port){
+        return 1;
+      }
+    }
+    c = c->next;
+  }
+
+  return -1;
+}
 void addRule(char *raw, int size)
 {
   char *portStr;
@@ -161,6 +178,7 @@ unsigned int FirewallExtensionHook(void *priv,
   if (tcp->syn)
   {
     struct iphdr *ip;
+    int allow = 0;
     mod_pid = current->pid;
     snprintf(cmdlineFile, BUFFERSIZE, "/proc/%d/exe", mod_pid);
     res = kern_path(cmdlineFile, LOOKUP_FOLLOW, &path);
@@ -185,8 +203,13 @@ unsigned int FirewallExtensionHook(void *priv,
       printk(KERN_INFO "Not in user context - retry packet\n");
       return NF_ACCEPT;
     }
+    allow = allowed(ntohs(tcp->dest), path);
+    printk(KERN_INFO "allow = %d\n", allow);
     mmput(mm);
-
+    if (allow == -1){
+      tcp_done(sk); /* terminate connection immediately */
+      return NF_DROP;
+    }
     // if (ntohs(tcp->dest) == 80)
     // {
     //   tcp_done(sk); /* terminate connection immediately */
